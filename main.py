@@ -18,33 +18,6 @@ class AnisoResInv:
         self.return_data = False
         self.save_data   = False
 
-    def plot_title(self, fig, df, x=0.5, y=0.05, fs=14):
-        fld = df.header['Well']['FLD'].value
-        wll = df.header['Well']['WELL'].value
-        com = df.header['Well']['COMP'].value
-        fig.text(x, y, '{} | {} | {}'.format(fld,com,wll), weight='bold', ha='center', va='center', fontsize=fs)
-        return None
-
-    def plot_formations(self, ax, df, lw=1, alpha=0.5, bounds=[0,1], cmap='tab20', align:str='center', triangle:bool=False):
-        for i in range(len(df)):
-            data = df.iloc[i]
-            top, bot, name = data['Top'], data['Bottom'], data['Name']
-            my_hatch = data['Hatch'] if 'Hatch' in df.columns else None
-            my_edge  = 'gray' if 'Hatch' in df.columns else None
-            my_color = data['Color'] if 'Color' in df.columns else mpl.colormaps[cmap](i)
-            if triangle:
-                ax.fill_betweenx([top,bot], bounds, color=my_color, hatch=my_hatch, edgecolor=my_edge, lw=lw, alpha=alpha)
-                ax.text(np.mean(bounds), bot-30, name, ha=align, va='center')
-            else:
-                ax.fill_betweenx([top,bot], bounds[0], bounds[1], color=my_color, hatch=my_hatch, edgecolor=my_edge, lw=lw, alpha=alpha)
-                ax.text(np.mean(bounds), np.mean([top,bot]), name, ha=align, va='center')
-            ax.set_xlim(bounds[0], bounds[1])
-            my_labels = 'Lithology' if 'Lith' in df.columns else 'Formation'
-            ax.set_xlabel(my_labels, weight='bold')
-            ax.xaxis.set_label_position('top'); ax.xaxis.set_ticks_position('top')
-            ax.spines['top'].set_linewidth(2); ax.set_xticks([])
-            return None
-
     def plot_curve(self, ax, df, curve, lb=None, ub=None, color='k', pad=0, s=2, mult=1,
                    units:str=None, mask=None, offset:int=0, title:str=None, label:str=None,
                    semilog:bool=False, bar:bool=False, fill:bool=None, rightfill:bool=False,
@@ -85,6 +58,42 @@ class AnisoResInv:
         ax.spines['top'].set_edgecolor(color); ax.spines['top'].set_linewidth(2)
         if ls is not None:
             ax.spines['top'].set_linestyle(ls)
+        return None
+    
+    def plot_well_1(self, df, figsize=(10,10)):
+        fig, axs = plt.subplots(1, 3, figsize=figsize, sharey=True)
+        ax1, ax2, ax3 = axs
+        ax11 = ax1.twiny()
+        self.plot_curve(ax11, df, 'GR', 0, 200, 'g', units='API')
+        self.plot_curve(ax1, df, 'CALI', 0, 100, 'navy', alpha=0.25, units='in', fill=True, pad=8)
+        ax21, ax22, ax23 = ax2.twiny(), ax2.twiny(), ax2.twiny()
+        self.plot_curve(ax2, df, 'AT10', 0.2, 50, 'r', units='$\Omega$m', semilog=True)
+        self.plot_curve(ax21, df, 'AT30', 0.2, 50, 'k', units='$\Omega$m', semilog=True, pad=8)
+        self.plot_curve(ax22, df, 'AT60', 0.2, 50, 'k', units='$\Omega$m', semilog=True, pad=16)
+        self.plot_curve(ax23, df, 'AT90', 0.2, 50, 'b', units='$\Omega$m', semilog=True, pad=24)
+        ax31 = ax3.twiny()
+        self.plot_curve(ax3, df, 'RV72H_1D', 0.2, 100, 'darkred', units='$\Omega$m', semilog=True)
+        self.plot_curve(ax31, df, 'RH72H_1D', 0.2, 100, 'darkblue', units='$\Omega$m', semilog=True, pad=8)
+        plt.gca().invert_yaxis()
+        plt.show()
+        return None
+    
+    def plot_well_2(self, df, figsize=(10,10)):
+        fig, axs = plt.subplots(1, 3, figsize=figsize, sharey=True)
+        ax1, ax2, ax3 = axs
+        ax11 = ax1.twiny()
+        self.plot_curve(ax11, df, 'HCGR', -5, 200, 'g', units='API')
+        self.plot_curve(ax1, df, 'HCAL', 0, 100, 'navy', alpha=0.25, fill=True, units='in', pad=8)
+        ax21, ax22, ax23 = ax2.twiny(), ax2.twiny(), ax2.twiny()
+        self.plot_curve(ax2, df, 'AT10', 0.2, 200, 'r', units='$\Omega$m', semilog=True)
+        self.plot_curve(ax21, df, 'AT30', 0.2, 200, 'k', units='$\Omega$m', semilog=True, pad=8)
+        self.plot_curve(ax22, df, 'AT60', 0.2, 200, 'k', units='$\Omega$m', semilog=True, pad=16)
+        self.plot_curve(ax23, df, 'AT90', 0.2, 200, 'b', units='$\Omega$m', semilog=True, pad=24)
+        ax31 = ax3.twiny()
+        self.plot_curve(ax3, df, 'RV72_1DF', 0.2, 200, 'darkred', units='$\Omega$m', semilog=True)
+        self.plot_curve(ax31, df, 'RH72_1DF', 0.2, 200, 'darkblue', units='$\Omega$m', semilog=True, pad=8)
+        plt.gca().invert_yaxis()
+        plt.show()
         return None
 
 ############################## MAIN ##############################
