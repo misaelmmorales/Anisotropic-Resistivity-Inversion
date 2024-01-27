@@ -1,3 +1,8 @@
-*.ipynb linguist-detectable=false
-*.las linguist-detectable=false
-*.LAS linguist-detectable=false
+Homework_1/*
+Lecture_Handout/*
+Lecture_Presentations/*
+paper/*
+Project/*
+References/*
+
+*.LAS
