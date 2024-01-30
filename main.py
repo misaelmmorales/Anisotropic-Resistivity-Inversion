@@ -12,6 +12,17 @@ class ARI:
         self.verbose     = True
         self.save_data   = True
         self.return_data = True
+
+        self.method     = 'L-BFGS-B'
+        self.lambda_reg = 1e-4
+        self.tolerance  = 1e-4
+        self.maxiter    = 500
+        self.x0         = [0.5, 1.5]
+        self.Wd_matrix  = True
+
+        self.n_ensemble = 100
+        self.noise_lvl  = 10
+
         self.check_torch_gpu()
 
     def check_torch_gpu(self):
@@ -63,7 +74,10 @@ class ARI:
                     ax.plot(x, y, c=color, label=curve, alpha=alpha,
                             marker=marker, markersize=s, markeredgecolor=edgecolor, linewidth=s, linestyle=ls)
             if fill:
-                ax.fill_betweenx(y, x, ub, alpha=alpha, color=color) if rightfill else ax.fill_betweenx(y, lb, x, alpha=alpha, color=color)
+                if rightfill:
+                    ax.fill_betweenx(y, x, ub, alpha=alpha, color=color)
+                else:
+                    ax.fill_betweenx(y, lb, x, alpha=alpha, color=color)
             if units is None:
                 if hasattr(df, 'curvesdict'):
                     units = df.curvesdict[curve].unit
@@ -85,3 +99,109 @@ class ARI:
                 ax.spines['top'].set_linestyle(ls)
             return None
     
+    def resistivity_inversion(self, df, Rvsh=None, Rhsh=None):
+        if Rvsh is None:
+            Rvsh = df['Rv'].iloc[np.argmax(df['GR'])]
+        if Rhsh is None:
+            Rhsh = df['Rh'].iloc[np.argmax(df['GR'])]
+        df['Csh_lin'] = (df['GR'] - df['GR'].min()) / (df['GR'].max() - df['GR'].min())
+        def objective(variables, *args):
+            Csh, Rs = variables
+            Rv,  Rh = args[0], args[1]
+            eq1 = (Csh*Rvsh + (1-Csh)*Rs) - Rv
+            eq2 = (Csh/Rhsh + (1-Csh)/Rs) - (1/Rh)
+            eqs = [eq1/Rv, eq2*Rh] if self.Wd_matrix else [eq1, eq2]
+            return linalg.norm(eqs) + self.lambda_reg*linalg.norm(variables)
+        def inversion():
+            res_aniso = df[['Rv','Rh']]
+            sol, fun, jac, nfev = [], [], [], []
+            for _, row in res_aniso.iterrows():
+                Rv_value, Rh_value = row['Rv'], row['Rh']
+                solution = optimize.minimize(objective,
+                                            x0      = self.x0,
+                                            args    = (Rv_value, Rh_value),
+                                            bounds  = [(0,1), (None,None)],
+                                            method  = self.method,
+                                            tol     = self.tolerance,
+                                            options = {'maxiter':self.maxiter})
+                fun.append(solution.fun); jac.append(solution.jac); nfev.append(solution.nfev)
+                jac1, jac2 = np.array(jac)[:,0], np.array(jac)[:,1]
+                sol.append({'Rv':Rv_value, 'Rh':Rh_value, 'Csh':solution.x[0], 'Rs':solution.x[1]})
+            sol = pd.DataFrame(sol, index=res_aniso.index)
+            sol['fun'], sol['nfev'], sol['jac1'], sol['jac2'], sol['norm_jac'] = fun, nfev, jac1, jac2, linalg.norm(jac, axis=1)
+            return sol
+        def simulate(sol):
+            Csh, Rs = sol['Csh'], sol['Rs']
+            Rv_sim = Csh*Rvsh + (1-Csh)*Rs
+            Rh_sim = Csh/Rhsh + (1-Csh)/Rs
+            sim = pd.DataFrame({'Rv_sim':Rv_sim, 'Rh_sim':1/Rh_sim}, index=sol.index)
+            return sim
+        def error(sol, sim):
+            Rv_true, Rh_true = sol['Rv'], sol['Rh']
+            Rv_pred, Rh_pred = sim['Rv_sim'], sim['Rh_sim']
+            Rv_err = np.abs((Rv_pred - Rv_true) / Rv_true) * 100
+            Rh_err = np.abs((Rh_pred - Rh_true) / Rh_true) * 100
+            res = pd.DataFrame({'Rv_err':Rv_err, 'Rh_err':Rh_err}, index=sol.index)
+            return res
+        val = df[['AT10','AT30','AT60','AT90','GR','Csh_lin']]
+        sol = inversion()
+        sim = simulate(sol)
+        err = error(sol, sim)
+        self.res_inv = val.join(sol).join(sim).join(err)
+        return self.res_inv
+    
+    def quadratic_inversion(self, df, Rvsh=None, Rhsh=None):
+        quad_inv = []
+        if Rvsh is None:
+            Rvsh = df['Rv'].iloc[np.argmax(df['GR'])]
+        if Rhsh is None:
+            Rhsh = df['Rh'].iloc[np.argmax(df['GR'])]
+        for _, row in df.iterrows():
+            Rv, Rh = row['Rv'], row['Rh']
+            a = Rh*Rvsh - Rh*Rhsh
+            b = Rv**2 + Rvsh*Rhsh - 2*Rh*Rhsh
+            c = Rv*Rhsh - Rh*Rhsh
+            qsol = np.roots([a,b,c])
+            if len(qsol) == 1:
+                quad_inv.append({'Csh_q1':qsol[0], 'Csh_q2':np.nan})
+            elif len(qsol) == 2:
+                quad_inv.append({'Csh_q1':qsol[0], 'Csh_q2':qsol[1]})
+            else:
+                quad_inv.append({'Csh_q1':np.nan, 'Csh_q2':np.nan})
+        self.quad_inv = pd.DataFrame(quad_inv, index=df.index)
+        return self.quad_inv
+    
+    def inversion_uq(self, df):
+        '''
+        Inversion with uncertainty quantification
+        '''
+        realizations = []
+        sigma_v, sigma_h = np.std(df['Rv']), np.std(df['Rh'])
+        for _ in range(self.n_ensemble):
+            df_noise = df.copy()
+            # Add noise to the data
+            e = np.random.normal(0, 1, df.shape[0])
+            df_noise['Rv'] = df['Rv'] + e*(self.noise_lvl/100)*sigma_v
+            df_noise['Rh'] = df['Rh'] + e*(self.noise_lvl/100)*sigma_h
+            # Invert the noisy data
+            df_inv = self.resistivity_inversion(df_noise)
+            realizations.append(df_inv)
+        return realizations
+    
+    def process_and_plot_uq(self, case, case_uq, figsize=(5,10), lw=0.1, alpha=1):
+        csh_ensemble = {}
+        for i in range(self.n_ensemble):
+            csh_ensemble[i] = case_uq[i]['Csh'].values
+        csh_ensemble = np.array(list(csh_ensemble.values()))
+        print('Ensemble shape: {}'.format(csh_ensemble.shape))
+        plt.figure(figsize=figsize)
+        for i in range(self.n_ensemble):
+            plt.plot(csh_ensemble[i], case.index, 'k', lw=lw, alpha=alpha)
+        plt.gca().invert_yaxis()
+        plt.tight_layout(); plt.show()
+        return None
+    
+if __name__ == 'main':
+    ari = ARI()
+    case1, case2 = ari.load_data()
+    ### END ###
