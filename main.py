@@ -15,8 +15,8 @@ class ARI:
 
         self.method     = 'L-BFGS-B'
         self.lambda_reg = 1e-4
-        self.tolerance  = 1e-4
-        self.maxiter    = 500
+        self.tolerance  = 1e-3
+        self.maxiter    = 100
         self.x0         = [0.5, 1.5]
         self.Wd_matrix  = True
 
