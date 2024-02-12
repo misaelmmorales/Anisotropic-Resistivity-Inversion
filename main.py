@@ -12,18 +12,18 @@ class ARI:
         self.verbose     = True
         self.save_data   = True
         self.return_data = True
+        self.check_torch_gpu()
 
         self.method     = 'L-BFGS-B'
-        self.lambda_reg = 1e-4
-        self.tolerance  = 1e-3
+        self.lambda_reg = 1e-5
+        self.tolerance  = 1e-5
         self.maxiter    = 100
-        self.x0         = [0.5, 1.5]
+        self.x0         = [0.5, 10]
         self.Wd_matrix  = True
 
         self.n_ensemble = 100
         self.noise_lvl  = 10
 
-        self.check_torch_gpu()
 
     def check_torch_gpu(self):
         '''
@@ -111,7 +111,7 @@ class ARI:
             eq1 = (Csh*Rvsh + (1-Csh)*Rs) - Rv
             eq2 = (Csh/Rhsh + (1-Csh)/Rs) - (1/Rh)
             eqs = [eq1/Rv, eq2*Rh] if self.Wd_matrix else [eq1, eq2]
-            return linalg.norm(eqs) + self.lambda_reg*linalg.norm(variables)
+            return linalg.norm(eqs,2)**2 + self.lambda_reg*linalg.norm(variables,2)**2
         def inversion():
             res_aniso = df[['Rv','Rh']]
             sol, fun, jac, nfev = [], [], [], []
