@@ -1,2 +1,2 @@
-# Resistivity-Anisotropy-Inversion
+# Anisotropic-Resistivity-Inversion
 Fast inversion algorithm for parallel- and perpendicular-to-bedding plane resistivity
