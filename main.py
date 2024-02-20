@@ -100,14 +100,21 @@ class ARI:
                 ax.spines['top'].set_linestyle(ls)
             return None
     
-    def resistivity_inversion(self, df,
-                            Wd_matrix:bool=True, lambda_reg=0, 
-                            x0=[0.5,1,1,1], method='L-BFGS-B',
-                            tolerance=1e-6, maxiter=100):
+    def resistivity_inversion(self, df, Rvsh=None, Rhsh=None):
+        x0         = self.x0
+        method     = self.method
+        lambda_reg = self.lambda_reg
+        maxiter    = self.maxiter
+        Wd_matrix  = self.Wd_matrix
+        tolerance  = self.tolerance
         df['Csh_lin'] = (df['GR'] - df['GR'].min()) / (df['GR'].max() - df['GR'].min())
-        
+        if Rvsh is None:
+            Rvsh = df['Rv'].iloc[np.argmax(df['GR'])]
+        if Rhsh is None:
+            Rhsh = df['Rh'].iloc[np.argmax(df['GR'])]
+
         def objective(variables, *args):
-            Csh, Rs, Rvsh, Rhsh = variables
+            Csh, Rs = variables
             Rv,  Rh = args[0], args[1]
             eq1 = (Csh*Rvsh + (1-Csh)*Rs) - Rv
             eq2 = (Csh/Rhsh + (1-Csh)/Rs) - (1/Rh)
@@ -123,23 +130,22 @@ class ARI:
                                             x0      = x0,
                                             args    = (Rv_value, Rh_value),
                                             jac     = '3-point',
-                                            bounds  = [(0,1), (None,None), (None,None), (None,None)],
+                                            bounds  = [(0,1), (None,None)],
                                             method  = method,
                                             tol     = tolerance,
                                             options = {'maxiter':maxiter})
                 fun.append(solution.fun); jac.append(solution.jac); nfev.append(solution.nfev)
                 jac1, jac2 = np.array(jac)[:,0], np.array(jac)[:,1]
                 sol.append({'Rv':Rv_value, 'Rh':Rh_value, 
-                            'Csh':solution.x[0], 'Rs':solution.x[1],
-                            'Rvsh':solution.x[2], 'Rhsh':solution.x[3]})
+                            'Csh':solution.x[0], 'Rs':solution.x[1]})
             sol = pd.DataFrame(sol, index=res_aniso.index)
             sol['fun'], sol['nfev'], sol['jac1'], sol['jac2'], sol['norm_jac'] = fun, nfev, jac1, jac2, linalg.norm(jac, axis=1)
             return sol
         
         def simulate(sol):
-            Csh, Rs, Rvsh, Rhsh = sol['Csh'], sol['Rs'], sol['Rvsh'], sol['Rhsh']
-            Rv_sim = Csh*Rvsh + (1-Csh)*Rs
-            Rh_sim = Csh/Rhsh + (1-Csh)/Rs
+            Csh, Rs = sol['Csh'], sol['Rs']
+            Rv_sim  = Csh*Rvsh + (1-Csh)*Rs
+            Rh_sim  = Csh/Rhsh + (1-Csh)/Rs
             sim = pd.DataFrame({'Rv_sim':Rv_sim, 'Rh_sim':1/Rh_sim}, index=sol.index)
             return sim
         
@@ -210,8 +216,8 @@ class ARI:
         return None
     
     def plot_inversion_results(self, inv, figsize=(25,12), savefig=True):
-        _, axs = plt.subplots(1, 6, figsize=figsize, sharey=True, facecolor='white')
-        ax1, ax2, ax3, ax4, ax5, ax6 = axs
+        _, axs = plt.subplots(1, 5, figsize=figsize, sharey=True, facecolor='white')
+        ax1, ax2, ax3, ax4, ax5 = axs
         ax11, ax12 = ax1.twiny(), ax1.twiny()
         self.plot_curve(ax1,  inv, 'GR',      lb=0, ub=150, color='g',    units='API',  pad=0)
         self.plot_curve(ax11, inv, 'Csh_lin', lb=0, ub=1,   color='gray', units='frac', pad=8)
@@ -228,13 +234,10 @@ class ARI:
         self.plot_curve(ax4,  inv, 'Rh',     lb=0.2, ub=100, color='darkblue',  units='$\Omega.m$',  semilog=True, pad=0)
         self.plot_curve(ax41, inv, 'Rh_sim', lb=0.2, ub=100, color='k', units='$\Omega.m$', alpha=0.75, ls='--', semilog=True, pad=8)
         self.plot_curve(ax42, inv, 'Rh_err', lb=1e-9, ub=100, color='blue', units='%', alpha=0.5, pad=16)
-        ax51 = ax5.twiny()
-        self.plot_curve(ax5,  inv, 'Rvsh', lb=0.2, ub=100, color='firebrick', units='$\Omega.m$', semilog=True, pad=0)
-        self.plot_curve(ax51, inv, 'Rhsh', lb=0.2, ub=100, color='royalblue', units='$\Omega.m$', semilog=True, pad=8)        
-        ax61, ax62 = ax6.twiny(), ax6.twiny()
-        self.plot_curve(ax6,  inv, 'fun',      lb=0, ub=0.6,  color='k', pad=0)
-        self.plot_curve(ax61, inv, 'nfev',     lb=50, ub=350, color='g', alpha=0.75, pad=8)
-        self.plot_curve(ax62, inv, 'norm_jac', lb=0,  ub=30,  color='m', alpha=0.75, pad=16)
+        ax51, ax52 = ax5.twiny(), ax5.twiny()
+        self.plot_curve(ax5,  inv, 'fun',      lb=0, ub=0.6,  color='k', pad=0)
+        self.plot_curve(ax51, inv, 'nfev',     lb=50, ub=350, color='g', alpha=0.75, pad=8)
+        self.plot_curve(ax52, inv, 'norm_jac', lb=0,  ub=30,  color='m', alpha=0.75, pad=16)
         ax1.set_ylabel('Depth [ft]')
         plt.gca().invert_yaxis()
         plt.savefig('inversion_results_{}.png'.format(str(time.time()).split('.')[0]), dpi=300) if savefig else None
