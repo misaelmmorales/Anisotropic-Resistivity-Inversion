@@ -139,7 +139,8 @@ class ARI:
                 sol.append({'Rv':Rv_value, 'Rh':Rh_value, 
                             'Csh':solution.x[0], 'Rs':solution.x[1]})
             sol = pd.DataFrame(sol, index=res_aniso.index)
-            sol['fun'], sol['nfev'], sol['jac1'], sol['jac2'], sol['norm_jac'] = fun, nfev, jac1, jac2, linalg.norm(jac, axis=1)
+            sol['fun'],  sol['nfev']                  = fun,  nfev, 
+            sol['jac1'], sol['jac2'], sol['norm_jac'] = jac1, jac2, linalg.norm(jac, axis=1)
             return sol
         
         def simulate(sol):
