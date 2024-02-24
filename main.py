@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import pandas as pd
 
@@ -6,7 +7,8 @@ from scipy import linalg, optimize
 import matplotlib.pyplot as plt
 
 import torch
-import time
+import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader
 
 class ARI:
     def __init__(self):
