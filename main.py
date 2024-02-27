@@ -17,13 +17,6 @@ class ARI:
         self.return_data = True
         self.check_torch_gpu()
 
-        self.method     = 'L-BFGS-B'
-        self.lambda_reg = 1e-5
-        self.tolerance  = 1e-5
-        self.maxiter    = 100
-        self.x0         = [0.5, 10]
-        self.Wd_matrix  = True
-
         self.n_ensemble = 100
         self.noise_lvl  = 10
 
@@ -102,13 +95,9 @@ class ARI:
                 ax.spines['top'].set_linestyle(ls)
             return None
     
-    def resistivity_inversion(self, df, Rvsh=None, Rhsh=None):
-        x0         = self.x0
-        method     = self.method
-        lambda_reg = self.lambda_reg
-        maxiter    = self.maxiter
-        Wd_matrix  = self.Wd_matrix
-        tolerance  = self.tolerance
+    def resistivity_inversion(self, df, Rvsh=None, Rhsh=None, 
+                              method:str='L-BFGS-B', x0=[0.5, 10], Wd_matrix:bool=True, 
+                              lambda_reg=1e-5, tolerance=1e-5, maxiter:int=100):
         df['Csh_lin'] = (df['GR'] - df['GR'].min()) / (df['GR'].max() - df['GR'].min())
         if Rvsh is None:
             Rvsh = df['Rv'].iloc[np.argmax(df['GR'])]
@@ -120,7 +109,7 @@ class ARI:
             Rv,  Rh = args[0], args[1]
             eq1 = (Csh*Rvsh + (1-Csh)*Rs) - Rv
             eq2 = (Csh/Rhsh + (1-Csh)/Rs) - (1/Rh)
-            eqs = [eq1*Rv, eq2*Rh] if Wd_matrix else [eq1, eq2]
+            eqs = [eq1/Rv, eq2/Rh] if Wd_matrix else [eq1, eq2]
             return linalg.norm(eqs,2)**2 + lambda_reg*linalg.norm(variables,2)**2
         
         def inversion():
