@@ -95,10 +95,11 @@ class ARI:
                 ax.spines['top'].set_linestyle(ls)
             return None
     
-    def resistivity_inversion(self, df, Rvsh=None, Rhsh=None, 
+    def resistivity_inversion(self, df, Rvsh=None, Rhsh=None, bounds=[(0,1), (None,None)],
                               method:str='L-BFGS-B', x0=[0.5, 10], Wd_matrix:bool=True, 
                               lambda_reg=1e-5, tolerance=1e-5, maxiter:int=100):
         df['Csh_lin'] = (df['GR'] - df['GR'].min()) / (df['GR'].max() - df['GR'].min())
+
         if Rvsh is None:
             Rvsh = df['Rv'].iloc[np.argmax(df['GR'])]
         if Rhsh is None:
@@ -109,8 +110,8 @@ class ARI:
             Rv,  Rh = args[0], args[1]
             eq1 = (Csh*Rvsh + (1-Csh)*Rs) - Rv
             eq2 = (Csh/Rhsh + (1-Csh)/Rs) - (1/Rh)
-            eqs = [eq1/Rv, eq2/Rh] if Wd_matrix else [eq1, eq2]
-            return linalg.norm(eqs,2)**2 + lambda_reg*linalg.norm(variables,2)**2
+            eqs = [eq1/Rv, eq2*Rh] if Wd_matrix else [eq1, eq2]
+            return linalg.norm(eqs,2) + lambda_reg*linalg.norm(variables,2)
         
         def inversion():
             res_aniso = df[['Rv','Rh']]
@@ -120,8 +121,7 @@ class ARI:
                 solution = optimize.minimize(objective,
                                             x0      = x0,
                                             args    = (Rv_value, Rh_value),
-                                            jac     = '3-point',
-                                            bounds  = [(0,1), (None,None)],
+                                            bounds  = bounds,
                                             method  = method,
                                             tol     = tolerance,
                                             options = {'maxiter':maxiter})
@@ -232,7 +232,7 @@ class ARI:
         self.plot_curve(ax52, inv, 'norm_jac', lb=0,  ub=30,  color='m', alpha=0.75, pad=16)
         ax1.set_ylabel('Depth [ft]')
         plt.gca().invert_yaxis()
-        plt.savefig('inversion_results_{}.png'.format(str(time.time()).split('.')[0]), dpi=300) if savefig else None
+        plt.savefig('figures/inversion_results_{}.png'.format(str(time.time()).split('.')[0]), dpi=300) if savefig else None
         plt.show()
         return None
     
