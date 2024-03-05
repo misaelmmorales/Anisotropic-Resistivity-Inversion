@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
 
 class ARI:
     def __init__(self):
