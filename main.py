@@ -117,7 +117,7 @@ class ARI:
     
     def resistivity_inversion(self, df, Rvsh=None, Rhsh=None, bounds=[(0,1), (None,None)],
                               method:str='L-BFGS-B', x0=[0.5,1.5], Wd_matrix:bool=True, 
-                              tolerance=1e-5, maxiter:int=100):
+                              lambda_reg=1e-5, tolerance=1e-3, maxiter:int=100):
 
         if Rvsh is None:
             Rvsh = df['Rv'].iloc[np.argmax(df['GR'])]
@@ -130,14 +130,10 @@ class ARI:
             eq1 = (Csh*Rvsh + (1-Csh)*Rs) - Rv
             eq2 = (Csh/Rhsh + (1-Csh)/Rs) - (1/Rh)
             eqs = [eq1/Rv, eq2*Rh] if Wd_matrix else [eq1, eq2]
-
-            x = np.expand_dims(np.array([Rv,Rh]), axis=-1)
-            u, s, vt = linalg.svd(x@x.T)
-            lambda_reg = 1/linalg.norm(u)
             return linalg.norm(eqs,2) + lambda_reg*linalg.norm(variables,2)
         
         def inversion():
-            res_aniso = df[['Rv','Rh','Csh_lin']]
+            res_aniso = df[['Rv','Rh']]
             sol, fun, jac, nfev = [], [], [], []
             for _, row in res_aniso.iterrows():
                 Rv_value, Rh_value = row['Rv'], row['Rh']
@@ -237,19 +233,19 @@ class ARI:
         ax11, ax12 = ax1.twiny(), ax1.twiny()
         self.plot_curve(ax1,  inv, 'GR',      lb=0, ub=150, color='g',    units='API',  pad=0)
         self.plot_curve(ax11, inv, 'Csh_lin', lb=0, ub=1,   color='gray', units='frac', pad=8)
-        self.plot_curve(ax12, inv, 'Csh',     lb=0, ub=1,   color='k',    units='frac', ls='--', pad=16)
+        self.plot_curve(ax12, inv, 'Csh',     lb=0, ub=1,   color='k',    units='frac', pad=16)
         ax21, ax22 = ax2.twiny(), ax2.twiny()
         self.plot_curve(ax2,  inv, 'AT10', lb=0.2, ub=200, color='r', units='$\Omega.m$', semilog=True, pad=0)
         self.plot_curve(ax21, inv, 'AT90', lb=0.2, ub=200, color='b', units='$\Omega.m$', semilog=True, pad=8)
         self.plot_curve(ax22, inv, 'Rs',   lb=0.2, ub=200, color='k', units='$\Omega.m$', alpha=0.75, semilog=True, pad=16)
         ax31, ax32 = ax3.twiny(), ax3.twiny()
         self.plot_curve(ax3,  inv, 'Rv',     lb=0.2, ub=100, color='darkred',  units='$\Omega.m$',   semilog=True, pad=0)
-        self.plot_curve(ax31, inv, 'Rv_sim', lb=0.2, ub=100, color='k', units='$\Omega.m$', ls='--', alpha=0.75, semilog=True, pad=8)
-        self.plot_curve(ax32, inv, 'Rv_err', lb=1e-9, ub=100, color='red', units='%', alpha=0.5, pad=16)
+        self.plot_curve(ax31, inv, 'Rv_err', lb=1e-9, ub=100, color='red', units='%', alpha=0.5, pad=8)
+        self.plot_curve(ax32, inv, 'Rv_sim', lb=0.2, ub=100, color='k', units='$\Omega.m$', ls='--', alpha=0.75, semilog=True, pad=16)
         ax41, ax42 = ax4.twiny(), ax4.twiny()
         self.plot_curve(ax4,  inv, 'Rh',     lb=0.2, ub=100, color='darkblue',  units='$\Omega.m$',  semilog=True, pad=0)
-        self.plot_curve(ax41, inv, 'Rh_sim', lb=0.2, ub=100, color='k', units='$\Omega.m$', alpha=0.75, ls='--', semilog=True, pad=8)
-        self.plot_curve(ax42, inv, 'Rh_err', lb=1e-9, ub=100, color='blue', units='%', alpha=0.5, pad=16)
+        self.plot_curve(ax41, inv, 'Rh_err', lb=1e-9, ub=100, color='blue', units='%', alpha=0.5, pad=8)
+        self.plot_curve(ax42, inv, 'Rh_sim', lb=0.2, ub=100, color='k', units='$\Omega.m$', alpha=0.75, ls='--', semilog=True, pad=16)
         ax51, ax52 = ax5.twiny(), ax5.twiny()
         self.plot_curve(ax5,  inv, 'fun',      lb=0, ub=0.6,  color='k', pad=0)
         self.plot_curve(ax51, inv, 'nfev',     lb=50, ub=350, color='g', alpha=0.75, pad=8)
