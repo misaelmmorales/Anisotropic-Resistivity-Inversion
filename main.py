@@ -116,9 +116,8 @@ class ARI:
             return None
     
     def resistivity_inversion(self, df, Rvsh=None, Rhsh=None, bounds=[(0,1), (None,None)],
-                              method:str='L-BFGS-B', x0=[0.5, 10], Wd_matrix:bool=True, 
-                              lambda_reg=1e-5, tolerance=1e-5, maxiter:int=100):
-        df['Csh_lin'] = (df['GR'] - df['GR'].min()) / (df['GR'].max() - df['GR'].min())
+                              method:str='L-BFGS-B', x0=[0.5,1.5], Wd_matrix:bool=True, 
+                              tolerance=1e-5, maxiter:int=100):
 
         if Rvsh is None:
             Rvsh = df['Rv'].iloc[np.argmax(df['GR'])]
@@ -131,10 +130,14 @@ class ARI:
             eq1 = (Csh*Rvsh + (1-Csh)*Rs) - Rv
             eq2 = (Csh/Rhsh + (1-Csh)/Rs) - (1/Rh)
             eqs = [eq1/Rv, eq2*Rh] if Wd_matrix else [eq1, eq2]
+
+            x = np.expand_dims(np.array([Rv,Rh]), axis=-1)
+            u, s, vt = linalg.svd(x@x.T)
+            lambda_reg = 1/linalg.norm(u)
             return linalg.norm(eqs,2) + lambda_reg*linalg.norm(variables,2)
         
         def inversion():
-            res_aniso = df[['Rv','Rh']]
+            res_aniso = df[['Rv','Rh','Csh_lin']]
             sol, fun, jac, nfev = [], [], [], []
             for _, row in res_aniso.iterrows():
                 Rv_value, Rh_value = row['Rv'], row['Rh']
@@ -168,7 +171,8 @@ class ARI:
             Rh_err = np.abs((Rh_pred - Rh_true) / Rh_true) * 100
             res = pd.DataFrame({'Rv_err':Rv_err, 'Rh_err':Rh_err}, index=sol.index)
             return res
-        
+
+        df['Csh_lin'] = (df['GR'] - df['GR'].min()) / (df['GR'].max() - df['GR'].min())
         val = df[['AT10','AT30','AT60','AT90','GR','Csh_lin']]
         sol = inversion()
         sim = simulate(sol)
