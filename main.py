@@ -29,6 +29,7 @@ import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader, TensorDataset
 
 class ARI:
     def __init__(self):
@@ -54,13 +55,13 @@ class ARI:
             print('# Device(s) available: {}, Name(s): {}'.format(count, name))
             print('-'*60+'\n')
         return None
-
+    
     def load_data(self):
         column_names = ['AT10', 'AT30', 'AT60', 'AT90', 'GR', 'Rv', 'Rh']
         index_name   = 'DEPTH'
         # well 1
         well1 = lasio.read('well1.las').df()
-        case1 = well1[['AT10','AT30','AT60','AT90','GR','RV72H_1D', 'RH72H_1D']].dropna()
+        case1 = well1[['AT10','AT30','AT60','AT90','GR','RV72H_1D_FLT','RH72H_1D_FLT']].dropna() #['RV72H_1D','RH72H_1D']
         case1.columns = column_names
         case1.index.name = index_name
         # well 2
