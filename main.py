@@ -25,11 +25,12 @@ import pandas as pd
 
 import lasio
 from scipy import linalg, optimize
+from scipy.io import loadmat
 import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, TensorDataset, random_split
 
 class ARI:
     def __init__(self):
