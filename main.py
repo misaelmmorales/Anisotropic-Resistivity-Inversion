@@ -27,6 +27,7 @@ import lasio
 from scipy import linalg, optimize
 from scipy.io import loadmat
 import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
 
 import torch
 import torch.nn as nn
