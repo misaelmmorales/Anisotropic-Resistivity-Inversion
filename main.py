@@ -5,7 +5,7 @@
 # Author: Misael M. Morales (github.com/misaelmmorales)                    #
 # Co-Authors: Oriyomi Raheem, Ali Eghbali - UT Austin                      #
 # Co-Authors: Dr. Michael Pyrcz, Dr. Carlos Torres-Verdin - UT Austin      #
-# Date: 2024-03-01                                                         #
+# Date: 2024                                                               #
 ############################################################################
 # Copyright (c) 2024, Misael M. Morales                                    #
 # Licensed under the Apache License, Version 2.0 (the "License");          #
