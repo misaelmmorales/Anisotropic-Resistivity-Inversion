@@ -33,6 +33,9 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset, random_split
 
+import pywt
+import torch.optim as optim
+
 class ARI:
     def __init__(self):
         self.verbose     = True
