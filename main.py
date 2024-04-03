@@ -195,11 +195,11 @@ class ARI:
             c = Rv*Rhsh - Rh*Rhsh
             qsol = np.roots([a,b,c])
             if len(qsol) == 1:
-                quad_inv.append({'Csh_q1':qsol[0], 'Csh_q2':np.nan})
+                quad_inv.append({'Csh_q':qsol[0], 'Rss_q':np.nan})
             elif len(qsol) == 2:
-                quad_inv.append({'Csh_q1':qsol[0], 'Csh_q2':qsol[1]})
+                quad_inv.append({'Csh_q':qsol[0], 'Rss_q':qsol[1]})
             else:
-                quad_inv.append({'Csh_q1':np.nan, 'Csh_q2':np.nan})
+                quad_inv.append({'Csh_q':np.nan, 'Rss_q':np.nan})
         self.quad_inv = pd.DataFrame(quad_inv, index=df.index)
         return self.quad_inv
     
