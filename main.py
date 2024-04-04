@@ -22,19 +22,19 @@
 import time
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 import lasio
+import pywt
 from scipy import linalg, optimize
 from scipy.io import loadmat
-import matplotlib.pyplot as plt
+from numdifftools import Jacobian, Hessian
 from sklearn.linear_model import LinearRegression
 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, TensorDataset, random_split
-
-import pywt
 import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset, random_split
 
 class ARI:
     def __init__(self):
