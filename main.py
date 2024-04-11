@@ -23,6 +23,7 @@ import time
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 import lasio
 import pywt
@@ -262,14 +263,33 @@ class ARI:
         plt.show()
         return None
     
-if __name__ == '__main__':
-    ari = ARI()
-    case1, case2 = ari.load_data()
-    qinv1 = ari.quadratic_inversion(case1)
-    qinv2 = ari.quadratic_inversion(case2)
-
-    inv1 = ari.resistivity_inversion(case1)
-    inv2 = ari.resistivity_inversion(case2)
-
-    ari.plot_inversion_results(inv1)
-    ari.plot_inversion_results(inv2)
+    def plot_inversion_animation(self, data, objective, R_min=1e-1, R_max=1e2, levels=50, skips=8, figsize=(8,5)):
+        xx, yy = np.meshgrid(np.linspace(-0.05,1.05,levels), np.linspace(R_min,R_max,levels))
+        fig, axs = plt.subplots(1,3,figsize=figsize, width_ratios=[0.25, 1, 0.05])
+        ax1, ax2, ax3 = axs
+        def animate(frame):
+            k = frame*skips
+            constants = data[['Rv','Rh','Rvsh_win','Rhsh_win']].iloc[k].values
+            zz = np.array([objective([x,y], *constants) for x,y in zip(xx.ravel(), yy.ravel())]).reshape(xx.shape)
+            ax1.clear()
+            ax1.plot(data['GR'], data.index, 'g', lw=1)
+            ax1.hlines(data.index[k], xmin=20, xmax=120, colors='r')
+            ax1.xaxis.set_ticks_position('top')
+            ax1.set(xlim=(20,120), ylabel='Depth [ft]')
+            ax1.set_title('GR [API]', color='g')
+            ax1.set_xlabel('z={:.2f} ft'.format(data.index[k]), color='r')
+            ax1.grid(True, which='both')
+            ax1.invert_yaxis()
+            ax2.clear()
+            im = ax2.contourf(xx, yy, zz, levels=levels, cmap='jet')
+            ax2.contour(xx, yy, zz, levels=levels, colors='k', linewidths=0.5)
+            ax2.vlines([[0,1]], ymin=R_min, ymax=R_max, colors='w', linestyles='--', linewidth=1)
+            ax2.hlines([R_min, R_max], xmin=0, xmax=1, colors='w', linestyles='--', linewidth=1)
+            ax2.set(yscale='log', title='Objective Function | z={:.2f} ft'.format(data.index[k]))
+            ax2.set_xlabel('Csh [v/v]', weight='bold')
+            ax2.set_ylabel('Rss [$\Omega\cdot m$]', weight='bold')
+            cb=fig.colorbar(im, cax=ax3); cb.set_label('Objective Function', rotation=270, labelpad=15)
+            plt.tight_layout()
+            return fig
+        ani = FuncAnimation(fig, animate, frames=len(data)//skips, repeat=False)
+        ani.save('animation.gif', writer='pillow', fps=20)
