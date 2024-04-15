@@ -27,6 +27,8 @@ from matplotlib.animation import FuncAnimation
 
 import lasio
 import pywt
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score
 from scipy import linalg, optimize
 from scipy.io import loadmat
 from numdifftools import Jacobian, Hessian
