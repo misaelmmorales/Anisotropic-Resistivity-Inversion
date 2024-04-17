@@ -124,6 +124,8 @@ class ARI:
             if ls is not None:
                 ax.spines['top'].set_linestyle(ls)
             return None
+
+    ###############################################################################################################
     
     def resistivity_inversion(self, df, Rvsh=None, Rhsh=None, bounds=[(0,1), (None,None)],
                               method:str='L-BFGS-B', x0=[0.5,1.5], Wd_matrix:bool=True, 
