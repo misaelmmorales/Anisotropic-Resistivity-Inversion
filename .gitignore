@@ -7,6 +7,5 @@ paper/*
 DIRECT2023_Maldonado_Multi-horizon_well_performance_forecasting_Code/*
 
 RvRh_Inversion_Ali.*
-
-*.LAS
-*.las
+well1.las
+well2.LAS
