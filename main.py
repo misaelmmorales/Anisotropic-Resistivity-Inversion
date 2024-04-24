@@ -70,15 +70,15 @@ def load_all_data():
     case2.columns = column_names
     case2.index.name = index_name
     # synthetic 1
-    synthetic_raw = lasio.read('cases//Case1.las').df()
-    synthetic_raw = synthetic_raw.join(lasio.read('cases//Case1_RvRh.las').df())
+    synthetic_raw = lasio.read('cases/Case1.las').df()
+    synthetic_raw = synthetic_raw.join(lasio.read('cases/Case1_RvRh.las').df())
     synthetic_names = ['GR','DPHI','NPHI','PEF','AT10', 'AT30', 'AT60', 'AT90', 'Rh', 'Rv']
     synthetic = synthetic_raw[['ECGR','DPHI','NPHI','PEF','RF10', 'RF30', 'RF60', 'RF90', 
                             'RESISTIVITY FORMATION (UNINVADED)', 'RESISTIVITY (PERPENDICULAR) FORMATION (UNINVADED)']]
     synthetic.columns = synthetic_names
     synthetic = synthetic.loc[5479.9:5680.1]
     # synthetic 2
-    synthetic2_raw = lasio.read('cases//Case2.las').df()
+    synthetic2_raw = lasio.read('cases/Case2.las').df()
     synthetic2_names = ['GR','RHOZ','NPOR','PEFZ','Rv','Rh']
     synthetic2 = synthetic2_raw[['GR','RHOZ','NPOR','PEFZ','RD_V','RD_H']].dropna()
     synthetic2.columns = synthetic2_names
@@ -108,6 +108,27 @@ def error_metrics(df):
     print('Standard Error     - Rv: {:.4f}  | Rh: {:.4f}'.format(sterr_rv, sterr_rh))
     print('Percentage Error   - Rv: {:.4f}% | Rh: {:.4f}%'.format(percerr_rv, percerr_rh))
     return None
+
+def quadratic_inversion(df, Rvsh=None, Rhsh=None):
+    quad_inv = []
+    if Rvsh is None:
+        Rvsh = df['Rv'].iloc[np.argmax(df['GR'])]
+    if Rhsh is None:
+        Rhsh = df['Rh'].iloc[np.argmax(df['GR'])]
+    for _, row in df.iterrows():
+        Rv, Rh = row['Rv'], row['Rh']
+        a = Rh*Rvsh - Rh*Rhsh
+        b = Rv**2 + Rvsh*Rhsh - 2*Rh*Rhsh
+        c = Rv*Rhsh - Rh*Rhsh
+        qsol = np.roots([a,b,c])
+        if len(qsol) == 1:
+            quad_inv.append({'Rss_q':qsol[0], 'Csh_q':np.nan})
+        elif len(qsol) == 2:
+            quad_inv.append({'Rss_q':qsol[0], 'Csh_q':qsol[1]})
+        else:
+            quad_inv.append({'Rss_q':np.nan, 'Csh_q':np.nan})
+    quad_inv = pd.DataFrame(quad_inv, index=df.index)
+    return quad_inv
 
 def plot_curve(ax, df, curve, lb=None, ub=None, color='k', pad=0, s=2, mult=1,
             units:str=None, mask=None, offset:int=0, title:str=None, label:str=None,
