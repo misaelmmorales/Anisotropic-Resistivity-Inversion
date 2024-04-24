@@ -339,12 +339,26 @@ def plot_crossplot(sol, figsize=(10,4), cmap='jet', alpha=0.66, vlim:tuple=(0.2,
     plt.show()
     return None
 
-def plot_pinn_results(results, figsize=(12.5,12.5), height_ratios=[1, 0.3, 0.3],
+def plot_loss(losses, figsize=(5,3)):
+    train_loss, valid_loss = losses
+    epochs = len(train_loss)
+    plt.figure(figsize=figsize)
+    plt.plot(range(epochs), train_loss, label='Trianing', c='tab:blue')
+    plt.plot(range(epochs), valid_loss, label='Validation', c='tab:orange')
+    plt.legend(facecolor='lightgrey', edgecolor='k')
+    plt.grid(True, which='both')
+    plt.xlabel('Epoch'); plt.ylabel('Loss')
+    plt.xlim(-2, epochs+2)
+    plt.tight_layout()
+    plt.show()
+    return None
+
+def plot_pinn_results(results, figsize=(12.5,12.5), height_ratios=[1, 0.3],
                       gr_lim=[0,150], at_lim=[0.2,50], r_lim=[0.15,120], h_lim=[0.2,10],
                       csh_c='k', rss_c='k', bins=50, cmaps=['Reds','Blues']):
 
     fig = plt.figure(figsize=figsize)
-    gs = GridSpec(3, 4, figure=fig, height_ratios=height_ratios)
+    gs = GridSpec(2, 4, figure=fig, height_ratios=height_ratios)
 
     ax11 = fig.add_subplot(gs[0, 0]); ax11.set(ylabel='Depth [ft]')
     ax12 = fig.add_subplot(gs[0, 1])
@@ -355,8 +369,6 @@ def plot_pinn_results(results, figsize=(12.5,12.5), height_ratios=[1, 0.3, 0.3],
     ax22 = fig.add_subplot(gs[1, 1])
     ax23 = fig.add_subplot(gs[1, 2])
     ax24 = fig.add_subplot(gs[1, 3])
-
-    ax3 = fig.add_subplot(gs[2,:])
 
     ax11b = ax11.twiny()
     plot_curve(ax11, results, 'GR', gr_lim[0], gr_lim[1], 'g', units='API', pad=8)
@@ -396,17 +408,7 @@ def plot_pinn_results(results, figsize=(12.5,12.5), height_ratios=[1, 0.3, 0.3],
                 xlim=h_lim, ylim=h_lim, xscale='log', yscale='log')
     ax24.plot(h_lim, h_lim, 'k--')
 
-    [ax.grid(True, which='both', alpha=0.4) for ax in [ax21, ax22, ax23, ax24, ax3]]
-
-    ax3.plot(results.index, results['Rvsh'], c='darkred', label='Rvsh')
-    ax3.plot(results.index, np.ones_like(results['Rvsh'])*results['Rvsh'].mean(), c='r', ls='--', label='Rvsh_mean')
-    #ax3.text(10025, results['Rvsh'].mean()+2, 'Mean: {:.3f}'.format(results['Rvsh'].mean()), color='r', bbox=dict(facecolor='lightgrey'))
-    ax3.plot(results.index, results['Rhsh'], c='darkblue', label='Rhsh')
-    ax3.plot(results.index, np.ones_like(results['Rhsh'])*results['Rhsh'].mean(), c='b', ls='--', label='Rhsh_mean')
-    #ax3.text(10025, results['Rhsh'].mean()+.5, 'Mean: {:.3f}'.format(results['Rhsh'].mean()), color='b', bbox=dict(facecolor='lightgrey'))
-    ax3.legend(facecolor='lightgrey', edgecolor='k')
-    ax3.set(yscale='log', xlabel='Depth [ft]', ylabel='Resistivity [$\Omega\cdot m$]')
-
+    [ax.grid(True, which='both', alpha=0.4) for ax in [ax21, ax22, ax23, ax24]]
     plt.tight_layout()
     plt.show()
     return None
@@ -458,7 +460,7 @@ def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12.5,12.5), heigh
     [ax.set(xscale='log') for ax in [ax12, ax13]]
     [ax.invert_yaxis() for ax in [ax11, ax12, ax13]]
     [ax.grid(True, which='both', alpha=0.4) for ax in axs]
-    [ax.set(xlabel='PINN') for ax in axs[3:]]
+    [ax.set(xlabel='PINN') for ax in [ax21, ax22, ax23, ax24]]
     [ax.set(xscale='log', yscale='log') for ax in axs[-3:]]
     [ax.axline((0,0), (1,1), c='k', ls='--') for ax in axs[-3:]]
 
