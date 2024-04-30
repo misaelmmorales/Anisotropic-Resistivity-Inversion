@@ -39,6 +39,7 @@ from sklearn.linear_model import LinearRegression
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset, random_split
 
 my_box = dict(facecolor='lightgrey', edgecolor='k', alpha=0.5)
@@ -353,8 +354,8 @@ def plot_loss(losses, figsize=(5,3)):
     plt.show()
     return None
 
-def plot_pinn_results(results, figsize=(12.5,12.5), height_ratios=[1, 0.3],
-                      gr_lim=[0,150], at_lim=[0.2,50], r_lim=[0.15,120], h_lim=[0.2,10],
+def plot_pinn_results(results, figsize=(12,12), height_ratios=[1, 0.3],
+                      gr_lim=[0,150], res_lim=[0.2,50], r_lim=[0.15,120], h_lim=[0.2,10],
                       csh_c='k', rss_c='k', bins=50, cmaps=['Reds','Blues']):
 
     fig = plt.figure(figsize=figsize)
@@ -375,18 +376,18 @@ def plot_pinn_results(results, figsize=(12.5,12.5), height_ratios=[1, 0.3],
     plot_curve(ax11b, results, 'Csh_pred', 0, 1, csh_c, units='v/v')
 
     ax12b, ax12c = ax12.twiny(), ax12.twiny()
-    plot_curve(ax12, results, 'AT10', at_lim[0], at_lim[1], 'r', semilog=True, units='$\Omega\cdot m$', pad=8)
-    plot_curve(ax12b, results, 'AT90', at_lim[0], at_lim[1], 'b', semilog=True, units='$\Omega\cdot m$', pad=16)
-    plot_curve(ax12c, results, 'Rss_pred', at_lim[0], at_lim[1], rss_c, units='$\Omega\cdot m$', semilog=True)
+    plot_curve(ax12, results, 'AT10', res_lim[0], res_lim[1], 'r', semilog=True, units='$\Omega\cdot m$', pad=8)
+    plot_curve(ax12b, results, 'AT90', res_lim[0], res_lim[1], 'b', semilog=True, units='$\Omega\cdot m$', pad=16)
+    plot_curve(ax12c, results, 'Rss_pred', res_lim[0], res_lim[1], rss_c, units='$\Omega\cdot m$', semilog=True)
 
     ax13b, ax13c = ax13.twiny(), ax13.twiny()
-    plot_curve(ax13, results, 'Rv', at_lim[0], at_lim[1], 'r', semilog=True, units='$\Omega\cdot m$', pad=8)
-    plot_curve(ax13b, results, 'Rv_sim', at_lim[0], at_lim[1], 'k', units='$\Omega\cdot m$', semilog=True)
+    plot_curve(ax13, results, 'Rv', res_lim[0], res_lim[1], 'r', semilog=True, units='$\Omega\cdot m$', pad=8)
+    plot_curve(ax13b, results, 'Rv_sim', res_lim[0], res_lim[1], 'k', units='$\Omega\cdot m$', semilog=True)
     plot_curve(ax13c, results, 'Rv_err', 0, 100, 'darkred', alpha=0.5, units='%', pad=16)
 
     ax14b, ax14c = ax14.twiny(), ax14.twiny()
-    plot_curve(ax14, results, 'Rh', at_lim[0], at_lim[1], 'b', semilog=True, units='$\Omega\cdot m$', pad=8)
-    plot_curve(ax14b, results, 'Rh_sim', at_lim[0], at_lim[1], 'k', units='$\Omega\cdot m$', semilog=True)
+    plot_curve(ax14, results, 'Rh', res_lim[0], res_lim[1], 'b', semilog=True, units='$\Omega\cdot m$', pad=8)
+    plot_curve(ax14b, results, 'Rh_sim', res_lim[0], res_lim[1], 'k', units='$\Omega\cdot m$', semilog=True)
     plot_curve(ax14c, results, 'Rh_err', 0, 100, 'darkblue', alpha=0.5, units='%', pad=16)
 
     [ax.grid(True, which='both') for ax in [ax11, ax12, ax13, ax14]]
@@ -413,8 +414,9 @@ def plot_pinn_results(results, figsize=(12.5,12.5), height_ratios=[1, 0.3],
     plt.show()
     return None
 
-def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12.5,12.5), height_ratios=[1, 0.3],
-                            gr_lim=[0,150], at_lim=[0.2,50], pinn_c='k', gb_c='gray', cmaps=['Greens', 'Oranges', 'Reds','Blues']):
+def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12,12), 
+                            height_ratios=[1, 0.3], gr_lim=[0,150], res_lim=[0.2,50], 
+                            pinn_c='k', gb_c='dimgrey', cmaps=['Greens', 'Oranges', 'Reds','Blues']):
 
     fig = plt.figure(figsize=figsize)
     gs = GridSpec(2, 4, figure=fig, height_ratios=height_ratios)
@@ -424,10 +426,10 @@ def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12.5,12.5), heigh
     ax13 = fig.add_subplot(gs[0, 2])
     ax14 = fig.add_subplot(gs[0, 3])
 
-    ax21 = fig.add_subplot(gs[1, 0]); ax21.set(xlim=(0,1), ylim=(0,1), ylabel='Gradient-Based')
-    ax22 = fig.add_subplot(gs[1, 1]); ax22.set(xlim=(0.2,80), ylim=(0.2,80))
-    ax23 = fig.add_subplot(gs[1, 2])
-    ax24 = fig.add_subplot(gs[1, 3])
+    ax21 = fig.add_subplot(gs[1, 0]); ax21.set(xlim=(0,1), ylim=(0,1))
+    ax22 = fig.add_subplot(gs[1, 1]); ax22.set(xlim=res_lim, ylim=res_lim)
+    ax23 = fig.add_subplot(gs[1, 2]); ax23.set(xlim=res_lim, ylim=res_lim)
+    ax24 = fig.add_subplot(gs[1, 3]); ax24.set(xlim=res_lim, ylim=res_lim)
 
     axs = [ax11, ax12, ax13, ax14, ax21, ax22, ax23, ax24]
 
@@ -437,20 +439,20 @@ def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12.5,12.5), heigh
     plot_curve(ax11c, pinn_results, 'Csh_pred', 0, 1, pinn_c, ls='--', units='v/v', pad=16)
 
     ax12b, ax12c, ax12d = ax12.twiny(), ax12.twiny(), ax12.twiny()
-    plot_curve(ax12, pinn_results, 'AT10', at_lim[0], at_lim[1], 'r', semilog=True, units='$\Omega\cdot m$')
-    plot_curve(ax12b, pinn_results, 'AT90', at_lim[0], at_lim[1], 'b', semilog=True, units='$\Omega\cdot m$', pad=8)
-    plot_curve(ax12c, gb_results, 'Rss_pred', at_lim[0], at_lim[1], gb_c, semilog=True, units='$\Omega\cdot m$', pad=16)
-    plot_curve(ax12d, pinn_results, 'Rss_pred', at_lim[0], at_lim[1], pinn_c, semilog=True, units='$\Omega\cdot m$', pad=24)
+    plot_curve(ax12, pinn_results, 'AT10', res_lim[0], res_lim[1], 'r', semilog=True, units='$\Omega\cdot m$')
+    plot_curve(ax12b, pinn_results, 'AT90', res_lim[0], res_lim[1], 'b', semilog=True, units='$\Omega\cdot m$', pad=8)
+    plot_curve(ax12c, gb_results, 'Rss_pred', res_lim[0], res_lim[1], gb_c, semilog=True, units='$\Omega\cdot m$', pad=16)
+    plot_curve(ax12d, pinn_results, 'Rss_pred', res_lim[0], res_lim[1], pinn_c, semilog=True, units='$\Omega\cdot m$', pad=24)
 
     ax13b, ax13c = ax13.twiny(), ax13.twiny()
-    plot_curve(ax13, pinn_results, 'Rv', at_lim[0], at_lim[1], 'r', semilog=True, units='$\Omega\cdot m$')
-    plot_curve(ax13b, gb_results, 'Rv_sim', at_lim[0], at_lim[1], gb_c, ls='--', semilog=True, units='$\Omega\cdot m$', pad=8)
-    plot_curve(ax13c, pinn_results, 'Rv_sim', at_lim[0], at_lim[1], pinn_c, ls='--', semilog=True, units='$\Omega\cdot m$', pad=16)
+    plot_curve(ax13, pinn_results, 'Rv', res_lim[0], res_lim[1], 'r', semilog=True, units='$\Omega\cdot m$')
+    plot_curve(ax13b, gb_results, 'Rv_sim', res_lim[0], res_lim[1], gb_c, ls='--', semilog=True, units='$\Omega\cdot m$', pad=8)
+    plot_curve(ax13c, pinn_results, 'Rv_sim', res_lim[0], res_lim[1], pinn_c, ls='--', semilog=True, units='$\Omega\cdot m$', pad=16)
 
     ax14b, ax14c = ax14.twiny(), ax14.twiny()
-    plot_curve(ax14, pinn_results, 'Rh', at_lim[0], at_lim[1], 'b', semilog=True, units='$\Omega\cdot m$')
-    plot_curve(ax14b, gb_results, 'Rh_sim', at_lim[0], at_lim[1], gb_c, ls='--', semilog=True, units='$\Omega\cdot m$', pad=8)
-    plot_curve(ax14c, pinn_results, 'Rh_sim', at_lim[0], at_lim[1], pinn_c, ls='--', semilog=True, units='$\Omega\cdot m$', pad=16)
+    plot_curve(ax14, pinn_results, 'Rh', res_lim[0], res_lim[1], 'b', semilog=True, units='$\Omega\cdot m$')
+    plot_curve(ax14b, gb_results, 'Rh_sim', res_lim[0], res_lim[1], gb_c, ls='--', semilog=True, units='$\Omega\cdot m$', pad=8)
+    plot_curve(ax14c, pinn_results, 'Rh_sim', res_lim[0], res_lim[1], pinn_c, ls='--', semilog=True, units='$\Omega\cdot m$', pad=16)
 
     ax21.scatter(pinn_results['Csh_pred'], gb_results['Csh_pred'], c=pinn_results.index, cmap=cmaps[0], edgecolor='gray', alpha=0.6)
     ax22.scatter(pinn_results['Rss_pred'], gb_results['Rss_pred'], c=pinn_results.index, cmap=cmaps[1], edgecolor='gray', alpha=0.6)
@@ -460,9 +462,9 @@ def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12.5,12.5), heigh
     [ax.set(xscale='log') for ax in [ax12, ax13]]
     [ax.invert_yaxis() for ax in [ax11, ax12, ax13]]
     [ax.grid(True, which='both', alpha=0.4) for ax in axs]
-    [ax.set(xlabel='PINN') for ax in [ax21, ax22, ax23, ax24]]
+    [ax.set(xlabel='PINN', ylabel='Gradient-Based') for ax in [ax21, ax22, ax23, ax24]]
     [ax.set(xscale='log', yscale='log') for ax in axs[-3:]]
-    [ax.axline((0,0), (1,1), c='k', ls='--') for ax in axs[-3:]]
+    [ax.axline((0,0), (1,1), c='k', ls='--') for ax in axs[-4:]]
 
     plt.tight_layout()
     plt.show()
