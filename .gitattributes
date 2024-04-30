@@ -1,1 +1,3 @@
 *.ipynb linguist-detectable=false
+*.las linguist-detectable=false
+*.LAS linguist-detectable=false
