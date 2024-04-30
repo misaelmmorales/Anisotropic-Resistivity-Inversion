@@ -85,10 +85,12 @@ def load_all_data():
     synthetic2.columns = synthetic2_names
     synthetic2 = synthetic2.loc[:5195]
     # return
-    print('Field Case 1: {}'.format(case1.shape))
-    print('Field Case 2: {}'.format(case2.shape))
-    print('Synthetic Case 1: {}'.format(synthetic.shape))
-    print('Synthetic Case 2: {}'.format(synthetic2.shape))
+    print('Name              : Source                : Shape')
+    print('----------------- : --------------------- : -----------')
+    print('Field Case 1      : (Chevron)             : {}'.format(case1.shape))
+    print('Field Case 2      : (AkerBP)              : {}'.format(case2.shape))
+    print('Synthetic Case 1  : (Laminated)           : {}'.format(synthetic.shape))
+    print('Synthetic Case 2  : (Laminated+Dispersed) : {}'.format(synthetic2.shape))
     return case1, case2, synthetic, synthetic2
 
 def error_metrics(df):
