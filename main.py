@@ -28,7 +28,6 @@ from matplotlib.gridspec import GridSpec
 from matplotlib.animation import FuncAnimation
 
 import lasio
-import pywt
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
 from scipy import linalg, optimize
@@ -58,40 +57,56 @@ def check_torch():
     return None
 
 def load_all_data():
-    column_names = ['AT10', 'AT30', 'AT60', 'AT90', 'GR', 'Rv', 'Rh']
+    column_names = ['CAL','AT10', 'AT30', 'AT60', 'AT90', 'GR', 'Rv', 'Rh']
     index_name   = 'DEPTH'
     # well 1
     well1 = lasio.read('cases/well1.las').df()
-    case1 = well1[['AT10','AT30','AT60','AT90','GR','RV72H_1D_FLT','RH72H_1D_FLT']].dropna()
+    case1 = well1[['CALI','AT10','AT30','AT60','AT90','GR','RV72H_1D_FLT','RH72H_1D_FLT']].dropna()
     case1.columns = column_names
     case1.index.name = index_name
+    case1.loc[:,'Rvsh'] = 2.813
+    case1.loc[:,'Rhsh'] = 0.775
+    case1.loc[:,'WNAME'] = 'Chevron'
+    case1.loc[:,'WIDX'] = 1
     # well 2
     well2 = lasio.read('cases/well2.LAS').df()
-    case2 = well2[['AT10','AT30','AT60','AT90','HCGR','RV72_1DF','RH72_1DF']].dropna()
+    case2 = well2[['HCAL','AT10','AT30','AT60','AT90','HCGR','RV72_1DF','RH72_1DF']].dropna()
     case2.columns = column_names
     case2.index.name = index_name
+    case2.loc[:,'Rvsh'] = 2.78
+    case2.loc[:,'Rhsh'] = 0.58
+    case2.loc[:,'WNAME'] = 'AkerBP'
+    case2.loc[:,'WIDX'] = 2
     # synthetic 1
-    synthetic_raw = lasio.read('cases/Case1.las').df()
-    synthetic_raw = synthetic_raw.join(lasio.read('cases/Case1_RvRh.las').df())
-    synthetic_names = ['GR','DPHI','NPHI','PEF','AT10', 'AT30', 'AT60', 'AT90', 'Rh', 'Rv']
-    synthetic = synthetic_raw[['ECGR','DPHI','NPHI','PEF','RF10', 'RF30', 'RF60', 'RF90', 
+    synthetic1_raw = lasio.read('cases/Case1.las').df()
+    synthetic1_raw = synthetic1_raw.join(lasio.read('cases/Case1_RvRh.las').df())
+    synthetic1_names = ['GR','DPHI','NPHI','PEF','AT10', 'AT30', 'AT60', 'AT90', 'Rh', 'Rv']
+    synthetic1 = synthetic1_raw[['ECGR','DPHI','NPHI','PEF','RF10', 'RF30', 'RF60', 'RF90', 
                             'RESISTIVITY FORMATION (UNINVADED)', 'RESISTIVITY (PERPENDICULAR) FORMATION (UNINVADED)']]
-    synthetic.columns = synthetic_names
-    synthetic = synthetic.loc[5479.9:5680.1]
+    synthetic1.columns = synthetic1_names
+    synthetic1 = synthetic1.loc[5479.9:5680.1]
+    synthetic1.loc[:,'Rvsh'] = 10
+    synthetic1.loc[:,'Rhsh'] = 1
+    synthetic1.loc[:,'WNAME'] = 'Synthetic1'
+    synthetic1.loc[:,'WIDX'] = 3
     # synthetic 2
     synthetic2_raw = lasio.read('cases/Case2.las').df()
     synthetic2_names = ['GR','RHOZ','NPOR','PEFZ','Rv','Rh']
     synthetic2 = synthetic2_raw[['GR','RHOZ','NPOR','PEFZ','RD_V','RD_H']].dropna()
     synthetic2.columns = synthetic2_names
     synthetic2 = synthetic2.loc[:5195]
+    synthetic2.loc[:,'Rvsh'] = 10
+    synthetic2.loc[:,'Rhsh'] = 1
+    synthetic2.loc[:,'WNAME'] = 'Synthetic2'
+    synthetic2.loc[:,'WIDX'] = 4
     # return
     print('Name              : Source                : Shape')
     print('----------------- : --------------------- : -----------')
     print('Field Case 1      : (Chevron)             : {}'.format(case1.shape))
     print('Field Case 2      : (AkerBP)              : {}'.format(case2.shape))
-    print('Synthetic Case 1  : (Laminated)           : {}'.format(synthetic.shape))
+    print('Synthetic Case 1  : (Laminated)           : {}'.format(synthetic1.shape))
     print('Synthetic Case 2  : (Laminated+Dispersed) : {}'.format(synthetic2.shape))
-    return case1, case2, synthetic, synthetic2
+    return case1, case2, synthetic1, synthetic2
 
 def error_metrics(df):
     mse_rv = mean_squared_error(df['Rv'], df['Rv_sim'])
@@ -356,7 +371,7 @@ def plot_loss(losses, figsize=(5,3)):
     plt.show()
     return None
 
-def plot_pinn_results(results, figsize=(12,12), height_ratios=[1, 0.3],
+def plot_pinn_results(results, figsize=(12,12), height_ratios=[1, 0.3], suptitle:str=None,
                       gr_lim=[0,150], res_lim=[0.2,50], r_lim=[0.15,120], h_lim=[0.2,10],
                       csh_c='k', rss_c='k', bins=50, cmaps=['Reds','Blues']):
 
@@ -412,11 +427,13 @@ def plot_pinn_results(results, figsize=(12,12), height_ratios=[1, 0.3],
     ax24.plot(h_lim, h_lim, 'k--')
 
     [ax.grid(True, which='both', alpha=0.4) for ax in [ax21, ax22, ax23, ax24]]
+    
+    fig.suptitle(suptitle, weight='bold', fontsize=14) if suptitle else None
     plt.tight_layout()
     plt.show()
     return None
 
-def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12,12), 
+def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12,12), suptitle:str=None,
                             height_ratios=[1, 0.3], gr_lim=[0,150], res_lim=[0.2,50], 
                             pinn_c='k', gb_c='dimgrey', cmaps=['Greens', 'Oranges', 'Reds','Blues']):
 
@@ -468,6 +485,7 @@ def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12,12),
     [ax.set(xscale='log', yscale='log') for ax in axs[-3:]]
     [ax.axline((0,0), (1,1), c='k', ls='--') for ax in axs[-4:]]
 
+    fig.suptitle(suptitle, weight='bold', fontsize=14) if suptitle else None
     plt.tight_layout()
     plt.show()
     return None
