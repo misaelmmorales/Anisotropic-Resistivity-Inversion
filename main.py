@@ -478,8 +478,7 @@ def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12,12), suptitle:
     ax23.scatter(pinn_results['Rv_sim'], gb_results['Rv_sim'], c=pinn_results.index, cmap=cmaps[2], edgecolor='gray', alpha=0.6)
     ax24.scatter(pinn_results['Rh_sim'], gb_results['Rh_sim'], c=pinn_results.index, cmap=cmaps[3], edgecolor='gray', alpha=0.6)
 
-    [ax.set(xscale='log') for ax in [ax12, ax13]]
-    [ax.invert_yaxis() for ax in [ax11, ax12, ax13]]
+    [ax.invert_yaxis() for ax in [ax11, ax12, ax13, ax14]]
     [ax.grid(True, which='both', alpha=0.4) for ax in axs]
     [ax.set(xlabel='PINN', ylabel='Gradient-Based') for ax in [ax21, ax22, ax23, ax24]]
     [ax.set(xscale='log', yscale='log') for ax in axs[-3:]]
