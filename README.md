@@ -1,4 +1,4 @@
-# Fast inversion algorithm for parallel- and perpendicular-to-bedding plane resistivity
+# Fast inversion for parallel- and perpendicular-to-bedding plane resistivity
 
 Repository to accompany the paper:
 
