@@ -44,9 +44,6 @@ from torch.utils.data import DataLoader, TensorDataset, random_split
 my_box = dict(facecolor='lightgrey', edgecolor='k', alpha=0.5)
 
 def check_torch():
-    '''
-    Check if Torch is successfully built with GPU support
-    '''
     torch_version, cuda_avail = torch.__version__, torch.cuda.is_available()
     count, name = torch.cuda.device_count(), torch.cuda.get_device_name()
     print('\n'+'-'*60)
