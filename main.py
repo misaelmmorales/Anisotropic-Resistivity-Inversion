@@ -28,8 +28,7 @@ from matplotlib.gridspec import GridSpec
 from matplotlib.animation import FuncAnimation
 
 import lasio
-from sklearn.metrics import mean_squared_error
-from sklearn.metrics import r2_score
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
 from scipy import linalg, optimize
 from scipy.io import loadmat
 from numdifftools import Jacobian, Hessian
@@ -108,30 +107,23 @@ def load_all_data():
 def error_metrics(df):
     mse_rv = mean_squared_error(df['Rv'], df['Rv_sim'])
     mse_rh = mean_squared_error(df['Rh'], df['Rh_sim'])
-
     r2_rv = r2_score(df['Rv'], df['Rv_sim'])*100
     r2_rh = r2_score(df['Rh'], df['Rh_sim'])*100
-
     sterr_rv = np.mean(np.abs(df['Rv']-df['Rv_sim'])) / np.std(np.abs(df['Rv']-df['Rv_sim']))
     sterr_rh = np.mean(np.abs(df['Rh']-df['Rh_sim'])) / np.std(np.abs(df['Rh']-df['Rh_sim']))
-
-    percerr_rv = np.mean(np.abs((df['Rv']-df['Rv_sim'])/df['Rv'])) * 100
-    percerr_rh = np.mean(np.abs((df['Rh']-df['Rh_sim'])/df['Rh'])) * 100
-
+    mape_rv = mean_absolute_percentage_error(df['Rv'], df['Rv_sim']) * 100
+    mape_rh = mean_absolute_percentage_error(df['Rh'], df['Rh_sim']) * 100
     print('Mean Squared Error - Rv: {:.4f}  | Rh: {:.4f}'.format(mse_rv, mse_rh))
     print('R2 Score           - Rv: {:.3f}  | Rh: {:.3f}'.format(r2_rv, r2_rh))
     print('Standard Error     - Rv: {:.4f}  | Rh: {:.4f}'.format(sterr_rv, sterr_rh))
-    print('Percentage Error   - Rv: {:.4f}% | Rh: {:.4f}%'.format(percerr_rv, percerr_rh))
+    print('MAPE               - Rv: {:.3f}%  | Rh: {:.3f}%'.format(mape_rv, mape_rh))
     return None
 
 def quadratic_inversion(df, Rvsh=None, Rhsh=None):
     quad_inv = []
-    if Rvsh is None:
-        Rvsh = df['Rv'].iloc[np.argmax(df['GR'])]
-    if Rhsh is None:
-        Rhsh = df['Rh'].iloc[np.argmax(df['GR'])]
     for _, row in df.iterrows():
         Rv, Rh = row['Rv'], row['Rh']
+        Rvsh, Rhsh = row['Rvsh'], row['Rhsh']
         a = Rh*Rvsh - Rh*Rhsh
         b = Rv**2 + Rvsh*Rhsh - 2*Rh*Rhsh
         c = Rv*Rhsh - Rh*Rhsh
@@ -142,8 +134,36 @@ def quadratic_inversion(df, Rvsh=None, Rhsh=None):
             quad_inv.append({'Rss_q':qsol[0], 'Csh_q':qsol[1]})
         else:
             quad_inv.append({'Rss_q':np.nan, 'Csh_q':np.nan})
-    quad_inv = pd.DataFrame(quad_inv, index=df.index)
-    return quad_inv
+    return pd.DataFrame(quad_inv, index=df.index)
+
+def newton_inversion(data, x0=[0.6, 1.2], method='hybr', tol=1e-10, maxiter=1000, clip:bool=True):
+    def quad_fun(x, *args):
+        Csh, Rss = x
+        Rv, Rh, Rvsh, Rhsh = args[0], args[1], args[2], args[3]
+        eq1 = (Csh*Rvsh + (1-Csh)*Rss) - Rv
+        eq2 = (Csh/Rhsh + (1-Csh)/Rss) - (1/Rh)
+        return np.array([eq1, eq2])
+    def quad_jac(x, *args):
+        Csh, Rss = x
+        Rv, Rh, Rvsh, Rhsh = args[0], args[1], args[2], args[3]
+        J11 = -(1-Csh)
+        J12 = Rvsh - Rss
+        J21 = -Csh/Rss**2
+        J22 = 1/Rhsh - 1/Rss
+        return np.array([[J11, J12],[J21, J22]])
+    Csh_pred, Rss_pred = [], []
+    for i in range(data.shape[0]):
+        Rv, Rh, Rvsh, Rhsh = data.iloc[i][['Rv', 'Rh', 'Rvsh', 'Rhsh']]
+        sol = optimize.root(quad_fun, 
+                            x0      = x0, 
+                            args    = (Rv, Rh, Rvsh, Rhsh), 
+                            method  = method, 
+                            jac     = quad_jac,
+                            tol     = tol,
+                            options = {'maxfev': maxiter})
+        Rss_pred.append(sol.x[0])
+        Csh_pred.append(np.clip(sol.x[1],0,1)) if clip else Csh_pred.append(sol.x[1])
+    return pd.DataFrame(np.array([Csh_pred, Rss_pred]).T, columns=['Csh_q', 'Rss_q'], index=data.index)
 
 def plot_curve(ax, df, curve, lb=None, ub=None, color='k', pad=0, s=2, mult=1,
             units:str=None, mask=None, offset:int=0, title:str=None, label:str=None,
