@@ -391,7 +391,8 @@ def plot_loss(losses, figsize=(5,3)):
 
 def plot_pinn_results(results, figsize=(12,12), height_ratios=[1, 0.3], suptitle:str=None,
                       gr_lim=[0,150], res_lim=[0.2,50], r_lim=[0.15,120], h_lim=[0.2,10],
-                      csh_c='k', rss_c='k', bins=50, cmaps=['Reds','Blues']):
+                      csh_c='k', rss_c='k', bins=50, cmaps=['Reds','Blues'],
+                      at_flag:bool=True):
 
     fig = plt.figure(figsize=figsize)
     gs = GridSpec(2, 4, figure=fig, height_ratios=height_ratios)
@@ -411,8 +412,12 @@ def plot_pinn_results(results, figsize=(12,12), height_ratios=[1, 0.3], suptitle
     plot_curve(ax11b, results, 'Csh_pred', 0, 1, csh_c, units='v/v')
 
     ax12b, ax12c = ax12.twiny(), ax12.twiny()
-    plot_curve(ax12, results, 'AT10', res_lim[0], res_lim[1], 'r', semilog=True, units='$\Omega\cdot m$', pad=8)
-    plot_curve(ax12b, results, 'AT90', res_lim[0], res_lim[1], 'b', semilog=True, units='$\Omega\cdot m$', pad=16)
+    if at_flag:
+        plot_curve(ax12, results, 'AT10', res_lim[0], res_lim[1], 'r', semilog=True, units='$\Omega\cdot m$', pad=8)
+        plot_curve(ax12b, results, 'AT90', res_lim[0], res_lim[1], 'b', semilog=True, units='$\Omega\cdot m$', pad=16)
+    else:
+        plot_curve(ax12, results, 'RHOZ', 1.81, 2.81, 'r', units='g/cc', pad=8)
+        plot_curve(ax12b, results, 'NPOR', 0.6, 0.0, 'b', units='PU', pad=16)
     plot_curve(ax12c, results, 'Rss_pred', res_lim[0], res_lim[1], rss_c, units='$\Omega\cdot m$', semilog=True)
 
     ax13b, ax13c = ax13.twiny(), ax13.twiny()
@@ -452,7 +457,7 @@ def plot_pinn_results(results, figsize=(12,12), height_ratios=[1, 0.3], suptitle
     return None
 
 def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12,12), suptitle:str=None,
-                            height_ratios=[1, 0.3], gr_lim=[0,150], res_lim=[0.2,50], 
+                            height_ratios=[1, 0.3], gr_lim=[0,150], res_lim=[0.2,50], at_flag:bool=False,
                             pinn_c='k', gb_c='dimgrey', cmaps=['Greens', 'Oranges', 'Reds','Blues']):
 
     fig = plt.figure(figsize=figsize)
@@ -476,9 +481,13 @@ def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12,12), suptitle:
     plot_curve(ax11c, pinn_results, 'Csh_pred', 0, 1, pinn_c, ls='--', units='v/v', pad=16)
 
     ax12b, ax12c, ax12d = ax12.twiny(), ax12.twiny(), ax12.twiny()
-    plot_curve(ax12, pinn_results, 'AT10', res_lim[0], res_lim[1], 'r', semilog=True, units='$\Omega\cdot m$')
-    plot_curve(ax12b, pinn_results, 'AT90', res_lim[0], res_lim[1], 'b', semilog=True, units='$\Omega\cdot m$', pad=8)
-    plot_curve(ax12c, gb_results, 'Rss_pred', res_lim[0], res_lim[1], gb_c, semilog=True, units='$\Omega\cdot m$', pad=16)
+    if at_flag:
+        plot_curve(ax12, pinn_results, 'AT10', res_lim[0], res_lim[1], 'r', semilog=True, units='$\Omega\cdot m$', pad=8)
+        plot_curve(ax12b, pinn_results, 'AT90', res_lim[0], res_lim[1], 'b', semilog=True, units='$\Omega\cdot m$', pad=16)
+    else:
+        plot_curve(ax12, pinn_results, 'RHOZ', 1.81, 2.81, 'r', units='g/cc')
+        plot_curve(ax12b, pinn_results, 'NPOR', 0.6, 0.0, 'b', units='PU', pad=8)
+    plot_curve(ax12c, gb_results, 'Rss_pred', res_lim[0], res_lim[1], gb_c, units='$\Omega\cdot m$', semilog=True, pad=16)
     plot_curve(ax12d, pinn_results, 'Rss_pred', res_lim[0], res_lim[1], pinn_c, semilog=True, units='$\Omega\cdot m$', pad=24)
 
     ax13b, ax13c = ax13.twiny(), ax13.twiny()
