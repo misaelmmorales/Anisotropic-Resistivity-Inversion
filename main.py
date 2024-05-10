@@ -463,6 +463,9 @@ def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12,12), suptitle:
     fig = plt.figure(figsize=figsize)
     gs = GridSpec(2, 4, figure=fig, height_ratios=height_ratios)
 
+    rho = 'RHOZ' if 'RHOZ' in pinn_results.columns elif 'RHOB' in pinn_results.columns else 'DPHI_y'
+    nph = 'NPOR' if 'NPOR' in pinn_results.columns else 'TNPH'
+
     ax11 = fig.add_subplot(gs[0, 0]); ax11.set(ylabel='Depth [ft]')
     ax12 = fig.add_subplot(gs[0, 1])
     ax13 = fig.add_subplot(gs[0, 2])
@@ -485,8 +488,8 @@ def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12,12), suptitle:
         plot_curve(ax12, pinn_results, 'AT10', res_lim[0], res_lim[1], 'r', semilog=True, units='$\Omega\cdot m$', pad=8)
         plot_curve(ax12b, pinn_results, 'AT90', res_lim[0], res_lim[1], 'b', semilog=True, units='$\Omega\cdot m$', pad=16)
     else:
-        plot_curve(ax12, pinn_results, 'RHOZ', 1.81, 2.81, 'r', units='g/cc')
-        plot_curve(ax12b, pinn_results, 'NPOR', 0.6, 0.0, 'b', units='PU', pad=8)
+        plot_curve(ax12, pinn_results, rho, 1.81, 2.81, 'r', units='g/cc')
+        plot_curve(ax12b, pinn_results, nph, 0.6, 0.0, 'b', units='PU', pad=8)
     plot_curve(ax12c, gb_results, 'Rss_pred', res_lim[0], res_lim[1], gb_c, units='$\Omega\cdot m$', semilog=True, pad=16)
     plot_curve(ax12d, pinn_results, 'Rss_pred', res_lim[0], res_lim[1], pinn_c, semilog=True, units='$\Omega\cdot m$', pad=24)
 
