@@ -463,8 +463,19 @@ def plot_pinn_gb_comparison(pinn_results, gb_results, figsize=(12,12), suptitle:
     fig = plt.figure(figsize=figsize)
     gs = GridSpec(2, 4, figure=fig, height_ratios=height_ratios)
 
-    rho = 'RHOZ' if 'RHOZ' in pinn_results.columns elif 'RHOB' in pinn_results.columns else 'DPHI_y'
-    nph = 'NPOR' if 'NPOR' in pinn_results.columns else 'TNPH'
+    if 'RHOZ' in pinn_results.columns:
+        rho = 'RHOZ'
+    elif 'RHOB' in pinn_results.columns:
+        rho = 'RHOB'
+    else:
+        rho = 'DPHI'
+
+    if 'TNPH' in pinn_results.columns:
+        nph = 'TNPH'
+    elif 'NPHI' in pinn_results.columns:
+        nph = 'NPHI'
+    else:
+        nph = 'DPHI'
 
     ax11 = fig.add_subplot(gs[0, 0]); ax11.set(ylabel='Depth [ft]')
     ax12 = fig.add_subplot(gs[0, 1])
