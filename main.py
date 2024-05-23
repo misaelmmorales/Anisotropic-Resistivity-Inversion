@@ -211,6 +211,41 @@ def plot_curve(ax, df, curve, lb=None, ub=None, color='k', pad=0, s=2, mult=1,
             ax.spines['top'].set_linestyle(ls)
         return None
 
+def plot_uq(ax, data, data_uq, ls='-', lw=2, color='r', qcolor='gray', alpha=0.4, galpha=0.66, 
+            eb_sampling=None, eb_stretch=2, semilog=False, xlim=None,
+            xlabel='mean $C_{sh}$', units='v/v', title='Case N'):
+    ax.fill_betweenx(data.index,
+                    data_uq.max(axis=0),
+                    data_uq.min(axis=0),
+                    color=qcolor, alpha=alpha)
+    ax.plot(data_uq.mean(axis=0), data.index, color, ls=ls, lw=lw, label='Mean')
+    ax.grid(True, which='both', alpha=galpha)
+    ax.invert_yaxis()
+    ax.set_xscale('log') if semilog else None
+    ax.set_xlim(xlim) if xlim is not None else None
+
+    ebar_sampling = len(data)//eb_sampling
+    ax.errorbar(data_uq.mean(axis=0)[::ebar_sampling],
+                    data.index[::ebar_sampling],
+                    xerr=eb_stretch*data_uq.std(axis=0)[::ebar_sampling],
+                    fmt='.', color='k', label='Error')
+
+    ax.set_xlabel('{} [{}]'.format(xlabel, units), color=color, weight='bold')
+    ax.xaxis.set_label_position('top'); ax.xaxis.set_ticks_position('top')
+    ax.xaxis.set_tick_params(color=color, width=lw)
+    ax.spines['top'].set_position(('axes', 1))
+    ax.spines['top'].set_edgecolor(color); ax.spines['top'].set_linewidth(lw)
+    ax.spines['top'].set_linestyle(ls)
+    ax.set_title(title, weight='bold')
+    return None
+
+def hist_uq(ax, data_uq, bins=30, alpha=0.7, color='r', label='$C_{sh}$', galpha=0.66, density=False, semilog=False):
+    ax.hist(data_uq.mean(axis=0), bins=bins, color=color, alpha=alpha, edgecolor='k', density=density)
+    ax.set_xlabel('Mean {}'.format(label))
+    ax.set_xscale('log') if semilog else None
+    ax.grid(True, which='both', alpha=galpha)
+    return None
+
 def plot_inversion_solution(data, sol, ali, figsize=(16.5,10)):
     fig, axs = plt.subplots(1,5, figsize=figsize, sharey=True, width_ratios=[0.6,0.6,0.6,1,1])
     ax1, ax2, ax3, ax4, ax5 = axs
