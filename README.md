@@ -2,7 +2,7 @@
 
 Repository to accompany the paper:
 
-Misael M. Morales, Ali Eghbali, Oriyomi Raheem, Michael Pyrcz, and Carlos Torres-Verdin. (2024). Anisotropic resistivity inversion and uncertainty quantification: A comparison between gradient-based and physics-informed neural network inversion techniques.
+Misael M. Morales, Ali Eghbali, Oriyomi Raheem, Michael Pyrcz, and Carlos Torres-Verdin. (2024). Anisotropic resistivity inversion and uncertainty quantification: A comparison between gradient-based inversion and physics-informed neural network inversion.
 
 <p align="center">
   <img src="https://github.com/misaelmmorales/Anisotropic-Resistivity-Inversion/blob/main/figures/real1-pinn.png" width=850>
