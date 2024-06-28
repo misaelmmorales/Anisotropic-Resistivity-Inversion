@@ -63,7 +63,7 @@ def load_all_data():
     case1.index.name = index_name
     case1.loc[:,'Rvsh'] = 2.813
     case1.loc[:,'Rhsh'] = 0.775
-    case1.loc[:,'WNAME'] = 'Chevron'
+    case1.loc[:,'WNAME'] = 'Field_1'
     case1.loc[:,'WIDX'] = 1
     # well 2
     well2 = lasio.read('cases/well2.LAS').df()
@@ -72,7 +72,7 @@ def load_all_data():
     case2.index.name = index_name
     case2.loc[:,'Rvsh'] = 2.78
     case2.loc[:,'Rhsh'] = 0.58
-    case2.loc[:,'WNAME'] = 'AkerBP'
+    case2.loc[:,'WNAME'] = 'Field_2'
     case2.loc[:,'WIDX'] = 2
     # synthetic 1
     synthetic1_raw = lasio.read('cases/Case1.las').df()
@@ -99,8 +99,8 @@ def load_all_data():
     # return
     print('Name              : Source                : Shape')
     print('----------------- : --------------------- : -----------')
-    print('Field Case 1      : (Chevron)             : {}'.format(case1.shape))
-    print('Field Case 2      : (AkerBP)              : {}'.format(case2.shape))
+    print('Field Case 1      : (North Africa)        : {}'.format(case1.shape))
+    print('Field Case 2      : (North Sea)           : {}'.format(case2.shape))
     print('Synthetic Case 1  : (Laminated)           : {}'.format(synthetic1.shape))
     print('Synthetic Case 2  : (Laminated+Dispersed) : {}'.format(synthetic2.shape))
     return case1, case2, synthetic1, synthetic2
