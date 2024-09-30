@@ -9,3 +9,5 @@ models/*
 cases/*
 uncertainty/*
 results/*
+
+3S_Analysis/*
