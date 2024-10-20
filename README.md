@@ -10,6 +10,7 @@ Misael M. Morales, Ali Eghbali, Oriyomi Raheem, Michael Pyrcz, and Carlos Torres
 
 <p align="center">
   <img src="https://github.com/misaelmmorales/Anisotropic-Resistivity-Inversion/blob/main/figures/uqcsh-all.png" width=850>
+  <img src="https://github.com/misaelmmorales/Anisotropic-Resistivity-Inversion/blob/main/figures/uqrss-all.png", width=850>
 </p> 
 
 <p align="center">
