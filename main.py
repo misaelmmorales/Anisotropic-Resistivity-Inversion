@@ -247,7 +247,7 @@ def hist_uq(ax, data_uq, bins=30, alpha=0.7, color='r', label='$C_{sh}$', galpha
     return None
 
 def plot_inversion_solution(data, sol, ali, figsize=(16.5,10)):
-    fig, axs = plt.subplots(1,5, figsize=figsize, sharey=True, width_ratios=[0.6,0.6,0.6,1,1])
+    _, axs = plt.subplots(1,5, figsize=figsize, sharey=True, width_ratios=[0.6,0.6,0.6,1,1])
     ax1, ax2, ax3, ax4, ax5 = axs
     colors = ['darkviolet','royalblue','firebrick']
     ax1.plot(data['GR'], data.index, c='g', label='GR')
@@ -288,7 +288,7 @@ def plot_inversion_solution(data, sol, ali, figsize=(16.5,10)):
     return None
 
 def plot_inversion_comparison(sol, ali, figsize=(15,10)):
-    fig, axs = plt.subplots(1, 6, figsize=figsize, sharey=True)
+    _, axs = plt.subplots(1, 6, figsize=figsize, sharey=True)
     ax1, ax2, ax3, ax4, ax5, ax6 = axs
     ax1.plot(sol['Rv'], sol.index, c='k', lw=2.75, label='Rv_true')
     ax1.plot(sol['Rv_sim'], sol.index, c='r', ls='--', label='Rv_sim')
@@ -325,7 +325,7 @@ def plot_inversion_comparison(sol, ali, figsize=(15,10)):
 
 def plot_inversion_fullsuite(data, sol, ali_sol, figsize=(17.5,10)):
     df = lasio.read('well1.las').df()
-    fig, axs = plt.subplots(1, 10, figsize=figsize, sharey=True)
+    _, axs = plt.subplots(1, 10, figsize=figsize, sharey=True)
     ax0, ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9 = axs
     ax01, ax02 = ax0.twiny(), ax0.twiny()
     plot_curve(ax0, df, 'CALI', 12, 24, 'dodgerblue', units='in', fill=True, semilog=True, pad=0)
