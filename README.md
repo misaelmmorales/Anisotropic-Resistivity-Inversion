@@ -1,7 +1,5 @@
 # Fast inversion for parallel- and perpendicular-to-bedding plane resistivity
 
-Repository to accompany the paper:
-
 Misael M. Morales, Ali Eghbali, Oriyomi Raheem, Michael Pyrcz, and Carlos Torres-Verdin. (2024). Anisotropic resistivity inversion and uncertainty quantification: A comparison between gradient-based inversion and physics-informed neural network inversion.
 
 <p align="center">
