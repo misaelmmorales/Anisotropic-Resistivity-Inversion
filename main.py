@@ -3,8 +3,8 @@
 #           FORMATION EVALUATION AND UNCERTAINTY QUANTIFICATION            #
 ############################################################################
 # Author: Misael M. Morales (github.com/misaelmmorales)                    #
-# Co-Authors: Oriyomi Raheem, Ali Eghbali - UT Austin                      #
-# Co-Authors: Dr. Michael Pyrcz, Dr. Carlos Torres-Verdin - UT Austin      #
+# Co-Authors: Oriyomi Raheem, Ali Eghbali                                  #
+# Co-Authors: Dr. Michael Pyrcz, Dr. Carlos Torres-Verdin                  #
 # Date: 2024                                                               #
 ############################################################################
 # Copyright (c) 2024, Misael M. Morales                                    #
