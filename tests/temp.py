@@ -60,10 +60,7 @@ class PositionalEncoding(nn.Module):
 
 import numpy as np
 
-# Assuming your data is stored in a variable named 'data'
 data = np.random.rand(2500, 2)  # Example random data, replace with your actual data
-
-# Reshape data into a suitable format for input into a temporal model
 sequence_length = 2500  # Assuming you want to treat each depth point as a time step
 num_features = 2  # Two columns representing the vertical and horizontal resistivity measurements
 
