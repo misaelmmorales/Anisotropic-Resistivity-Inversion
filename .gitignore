@@ -10,8 +10,4 @@ cases/*
 uncertainty/*
 results/*
 
-3S_Analysis/*
-CP_demo.ipynb
-CP_hm.py
-CP_iso.py
-CP_vsh.py
+ConocoPhillips Demo/*
