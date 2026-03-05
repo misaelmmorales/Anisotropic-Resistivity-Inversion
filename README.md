@@ -43,16 +43,17 @@ Then install dependencies. The main file `main.py` imports the necessary librari
 
 ## Usage
 
-The repository includes several Jupyter notebooks demonstrating different applications:
+The repository includes several Jupyter notebooks in the `notebooks/` folder demonstrating different applications:
 
-- `main_GradientBased.ipynb` - Gradient-based inversion workflow
-- `main_PGNN.ipynb` - Physics-guided neural network inversion
-- `main_DataAssimilation.ipynb` - Data assimilation approach
-- `main_MultipleDataAssimilation.ipynb` - Multiple data integration
-- `main_UncertaintyQuantification.ipynb` - Uncertainty quantification analysis
-- `main_Isotropic.ipynb` - Isotropic inversion baseline
-- `main_CompareResults.ipynb` - Comparison of inversion methods
-- `main_make_plots.ipynb` - Figure generation
+- `notebooks/main_GradientBased.ipynb` - Gradient-based inversion workflow
+- `notebooks/main_PGNN.ipynb` - Physics-guided neural network inversion
+- `notebooks/main_DataAssimilation.ipynb` - Data assimilation approach
+- `notebooks/main_MultipleDataAssimilation.ipynb` - Multiple data integration
+- `notebooks/main_UncertaintyQuantification.ipynb` - Uncertainty quantification analysis
+- `notebooks/main_Isotropic.ipynb` - Isotropic inversion baseline
+- `notebooks/main_CompareResults.ipynb` - Comparison of inversion methods
+- `notebooks/main_make_plots.ipynb` - Figure generation
+- `notebooks/demo_GradientBased.ipynb` - Quick-start demonstration
 
 All notebooks import core functions from `main.py`.
 
@@ -74,6 +75,7 @@ All notebooks import core functions from `main.py`.
 ## Project Structure
 
 - `main.py` - Core inversion functions and utilities
+- `notebooks/` - Jupyter notebooks for different inversion workflows and demonstrations
 - `models/` - Pre-trained PyTorch models
 - `results/` - Inversion results and CSV outputs
 - `cases/` - Field and synthetic case data (LAS files)
